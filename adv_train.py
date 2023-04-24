@@ -323,6 +323,8 @@ def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_
         attack = fb.attacks.LinfPGD(steps=nb_iter, abs_stepsize=epsilon / 4)
     elif attack_type == 'l2_pgd':
         attack = fb.attacks.L2ProjectedGradientDescentAttack(rel_stepsize=0.025, abs_stepsize=None, steps=nb_iter, random_start=True)
+    elif attack_type == 'fgsm':
+        attack = fb.attacks.FGSM()
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
     
@@ -350,9 +352,16 @@ class AdversarialLoader(DataLoader):
 """## Save Adversarial Images"""
 
 # Create the AdversarialLoader
-attacked_model = resnet_model
-save_images_folder= "adversarial_images_ResNet18_L2PGD/"
-attack_type='l2_pgd'
+attack_type='fgsm'
+attack_model_name = 'ResNet18'
+
+if attack_model_name == 'ResNet18':
+    attacked_model = resnet_model
+elif attack_model_name == 'ResNet50':
+    attacked_model = resnet50_model
+elif attack_model_name == 'VIT ':
+    attacked_model = vit_model
+save_images_folder= f"adversarial_images_{attack_model_name}_{attack_type}/"
 val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attacked_model, attack_type=attack_type, batch_size=64, shuffle=False, num_workers=4)
 
 import os
@@ -390,8 +399,8 @@ with open(adversarial_images_dir+"labels.txt", "w") as labels_file:
 
 """## Adversarial evaluation"""
 
-adv_files = [DIR_PATH+ 'adversarial_images_ResNet18_L2PGD/labels.txt']
-adv_img_dir = DIR_PATH+ 'adversarial_images_ResNet18_L2PGD/'
+adv_files = [DIR_PATH+ f'{save_images_folder}/labels.txt']
+adv_img_dir = DIR_PATH+ f'{save_images_folder}/'
 val_adversarial_dataset = GroceryDataset(adv_files, adv_img_dir, data_transforms['val'])
 val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
 
