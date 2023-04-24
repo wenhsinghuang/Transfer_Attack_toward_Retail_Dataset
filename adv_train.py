@@ -325,6 +325,8 @@ def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_
         attack = fb.attacks.L2ProjectedGradientDescentAttack(rel_stepsize=0.025, abs_stepsize=None, steps=nb_iter, random_start=True)
     elif attack_type == 'fgsm':
         attack = fb.attacks.FGSM()
+    elif attack_type == 'l1_fmn':
+        attack = fb.attacks.L1FMNAttack()
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
     
@@ -352,7 +354,7 @@ class AdversarialLoader(DataLoader):
 """## Save Adversarial Images"""
 
 # Create the AdversarialLoader
-attack_type='fgsm'
+attack_type='l1_fmn'
 attack_model_name = 'ResNet50'
 
 if attack_model_name == 'ResNet18':
