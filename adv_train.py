@@ -133,7 +133,7 @@ def train_model(model, model_name, criterion, optimizer, scheduler, train_datalo
                     'optimizer_state_dict': optimizer.state_dict(),
                     'scheduler_state_dict': scheduler.state_dict(),
                     'loss': criterion,
-                }, GoogleDrivePath + f'{model_name}/{model_name}_checkpoint.pth')
+                }, DIR_PATH + f'{model_name}/{model_name}_checkpoint.pth')
 
         print()
 
@@ -171,7 +171,7 @@ def load_checkpoint_and_resume(model, checkpoint_path):
 
 """# Load Dataset"""
 
-GoogleDrivePath = "./drive/MyDrive/CS598/"
+DIR_PATH = "./"
 
 # transform
 data_transforms = {
@@ -192,9 +192,9 @@ data_transforms = {
 batch_size = 256
 
 # The Freiburg Groceries Dataset
-img_dir = GoogleDrivePath+'images/'
+img_dir = DIR_PATH+'images/'
 train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
-train_annotations_files = [GoogleDrivePath+x for x in train_annotations_files]
+train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
 
 # load dataset
 train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
@@ -234,7 +234,7 @@ resnet_scheduler = lr_scheduler.StepLR(resnet_optimizer, step_size=7, gamma=0.1)
 """## Load Trained ResNet18 model"""
 
 # restore training from best ckpt
-checkpoint_path = GoogleDrivePath + "ckpts/resnet18_checkpoint.pth"
+checkpoint_path = DIR_PATH + "ckpts/resnet18_checkpoint.pth"
 
 resnet_model, resnet_optimizer, resnet_scheduler, last_epoch = load_checkpoint_and_resume(
     resnet_model, checkpoint_path)
@@ -245,7 +245,7 @@ resnet_model, resnet_optimizer, resnet_scheduler, last_epoch = load_checkpoint_a
 
 
 
-checkpoint_path = GoogleDrivePath + "ckpts/resnet50_checkpoint.pth"
+checkpoint_path = DIR_PATH + "ckpts/resnet50_checkpoint.pth"
 
 resnet50_model, resnet50_optimizer, resnet50_scheduler, last_epoch = load_checkpoint_and_resume(
     resnet50_model, checkpoint_path)
@@ -253,7 +253,7 @@ resnet50_model, resnet50_optimizer, resnet50_scheduler, last_epoch = load_checkp
 """## Load Trained ViT model"""
 
 # restore vit_model from best ckpt
-checkpoint_path = GoogleDrivePath + "ckpts/vit_checkpoint.pth"
+checkpoint_path = DIR_PATH + "ckpts/vit_checkpoint.pth"
 
 vit_model, vit_optimizer, vit_scheduler, last_epoch = load_checkpoint_and_resume(
     vit_model, checkpoint_path)
@@ -286,9 +286,9 @@ def evaluate_model(model, dataloader):
 """## Clean Eval"""
 
 # The Freiburg Groceries Dataset
-img_dir = GoogleDrivePath+'images/'
+img_dir = DIR_PATH+'images/'
 val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
-val_annotations_files = [GoogleDrivePath+x for x in val_annotations_files]
+val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
 
 # load dataset
 val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
@@ -360,8 +360,7 @@ import numpy as np
 from PIL import Image
 
 # Create a directory to store the adversarial images
-GoogleDrivePath = "./drive/MyDrive/CS598/"
-adversarial_images_dir = os.path.join(GoogleDrivePath, save_images_folder)
+adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
 # print(adversarial_images_dir)
 if not os.path.exists(adversarial_images_dir):
     os.makedirs(adversarial_images_dir)
@@ -391,23 +390,20 @@ with open(adversarial_images_dir+"labels.txt", "w") as labels_file:
 
 """## Adversarial evaluation"""
 
-adv_files = [GoogleDrivePath+ 'adversarial_images_ResNet18_L2PGD/labels.txt']
-adv_img_dir = GoogleDrivePath+ 'adversarial_images_ResNet18_L2PGD/'
+adv_files = [DIR_PATH+ 'adversarial_images_ResNet18_L2PGD/labels.txt']
+adv_img_dir = DIR_PATH+ 'adversarial_images_ResNet18_L2PGD/'
 val_adversarial_dataset = GroceryDataset(adv_files, adv_img_dir, data_transforms['val'])
 val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
 
 # Evaluate the model on the adversarial examples
 resnet_adversarial_accuracy = evaluate_model(resnet_model, val_adversarial_loader)
-print()
 print(f'ResNet18 model accuracy on adversarial examples: {resnet_adversarial_accuracy * 100:.2f}%')
 
 # Evaluate the model on the adversarial examples
 resnet50_adversarial_accuracy = evaluate_model(resnet50_model, val_adversarial_loader)
-print()
 print(f'ResNet50 model accuracy on adversarial examples: {resnet50_adversarial_accuracy * 100:.2f}%')
 
 vit_adversarial_accuracy = evaluate_model(vit_model, val_adversarial_loader)
-print()
 print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
 
 """## Show adversarial Image"""
