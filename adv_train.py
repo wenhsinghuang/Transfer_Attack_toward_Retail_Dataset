@@ -353,7 +353,7 @@ class AdversarialLoader(DataLoader):
 
 # Create the AdversarialLoader
 attack_type='fgsm'
-attack_model_name = 'ResNet18'
+attack_model_name = 'ResNet50'
 
 if attack_model_name == 'ResNet18':
     attacked_model = resnet_model
