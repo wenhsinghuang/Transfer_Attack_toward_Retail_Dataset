@@ -145,7 +145,7 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
     elif attack_type == 'inf_pgd':
         attack = fb.attacks.LinfPGD()
     elif attack_type == 'l2_cw':
-        attack = fb.attacks.L2CarliniWagnerAttack(steps=100)
+        attack = fb.attacks.L2CarliniWagnerAttack(steps=1000)
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
 
@@ -226,6 +226,7 @@ def generate_adversarial_examples(attack_model, save_images_folder):
                 counter += 1
 
 def experiment(attack_type, attack_model_name, adv_examples_exist=False):
+    print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
     # Load models
     resnet_model, resnet50_model, vit_model = load_models()
     if attack_model_name == 'ResNet18':
@@ -267,15 +268,13 @@ if __name__ == '__main__':
     attack_model_name = 'ResNet18'
     adv_examples_exist = False
 
-    print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
-
     # experiment(attack_type, attack_model_name, adv_examples_exist=adv_examples_exist)
 
-    experiment('pgd', 'ResNet18', adv_examples_exist=False)
-    experiment('l2_pgd', 'ResNet18', adv_examples_exist=False)
-    experiment('fgsm', 'ResNet18', adv_examples_exist=False)
+    # experiment('pgd', 'ResNet18', adv_examples_exist=False)
+    # experiment('l2_pgd', 'ResNet18', adv_examples_exist=False)
+    # experiment('fgsm', 'ResNet18', adv_examples_exist=False)
     experiment('l2_cw', 'ResNet18', adv_examples_exist=False)
-    experiment('pgd', 'ResNet50', adv_examples_exist=False)
-    experiment('l2_pgd', 'ResNet50', adv_examples_exist=False)
-    experiment('fgsm', 'ResNet50', adv_examples_exist=False)
+    # experiment('pgd', 'ResNet50', adv_examples_exist=False)
+    # experiment('l2_pgd', 'ResNet50', adv_examples_exist=False)
+    # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
     experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
