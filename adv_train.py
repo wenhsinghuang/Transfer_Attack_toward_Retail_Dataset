@@ -327,6 +327,8 @@ def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_
         attack = fb.attacks.FGSM()
     elif attack_type == 'inf_pgd':
         attack = fb.attacks.LinfPGD()
+    elif attack_type == 'l2_cw':
+        attack = fb.attacks.L2CarliniWagnerAttack()
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
     
@@ -354,7 +356,7 @@ class AdversarialLoader(DataLoader):
 """## Save Adversarial Images"""
 
 # Create the AdversarialLoader
-attack_type='inf_pgd'
+attack_type='l2_cw'
 attack_model_name = 'ResNet18'
 
 if attack_model_name == 'ResNet18':
@@ -416,55 +418,3 @@ print(f'ResNet50 model accuracy on adversarial examples: {resnet50_adversarial_a
 
 vit_adversarial_accuracy = evaluate_model(vit_model, val_adversarial_loader)
 print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
-
-"""## Show adversarial Image"""
-
-def display_random_images(model, val_loader, val_adversarial_loader, num_images=5):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.eval()
-
-    # Get random images from validation set and adversarial set
-    val_images, val_labels = next(iter(val_loader))
-    val_images = val_images[:num_images].to(device)
-    val_labels = val_labels[:num_images].to(device)
-
-    adv_images, adv_labels = next(iter(val_adversarial_loader))
-    adv_images = adv_images[:num_images].to(device)
-    adv_labels = adv_labels[:num_images].to(device)
-    
-    # Calculate noise images
-    noise_images = (val_images - adv_images)
-    noise_images_scaled = (noise_images - noise_images.min()) / (noise_images.max() - noise_images.min())
-
-
-    # Get predictions for all images
-    with torch.no_grad():
-        val_preds = model(val_images)
-        adv_preds = model(adv_images)
-        #noise_preds = model(noise_images)
-
-    # Show the images with their predictions
-    fig, axs = plt.subplots(num_images, 3, figsize=(10, 2*num_images))
-
-    for i in range(num_images):
-        # Show original validation image
-        axs[i, 0].imshow(val_images[i].permute(1, 2, 0).cpu())
-        axs[i, 0].axis('off')
-        axs[i, 0].set_title(f'Org Label: {val_labels[i]}, Predicted: {val_preds[i].argmax()}')
-
-        # Show adversarial image
-        axs[i, 1].imshow(adv_images[i].permute(1, 2, 0).cpu())
-        axs[i, 1].axis('off')
-        axs[i, 1].set_title(f'Adv Label: {adv_labels[i]}, Predicted: {adv_preds[i].argmax()}')
-
-        # Show noise image
-        axs[i, 2].imshow(noise_images_scaled[i].permute(1, 2, 0).cpu())
-        axs[i, 2].axis('off')
-        axs[i, 2].set_title(f'Noise')
-        #  max: {noise_images.max()}, min: {noise_images.min()}
-
-    plt.tight_layout()
-    plt.show()
-
-# display_random_images(resnet_model, val_loader, val_adversarial_loader)
