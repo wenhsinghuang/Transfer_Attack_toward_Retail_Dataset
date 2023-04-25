@@ -255,9 +255,9 @@ def experiment(attack_type, attack_model_name, adv_examples_exist=False):
     print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
 
 if __name__ == '__main__':
-    attack_type='inf_pgd'
+    attack_type='pgd'
     attack_model_name = 'ResNet18'
-    adv_examples_exist = True
+    adv_examples_exist = False
 
     print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
 
