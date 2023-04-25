@@ -132,8 +132,7 @@ def evaluate_model(model, dataloader):
 def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10):
     original_mode = model.training  # Store the original mode of the model
     model.eval()  # Set the model to evaluation mode temporarily
-    model.to(device)
-    print(model.device)
+    model = model.to(device)
     
     fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
     
