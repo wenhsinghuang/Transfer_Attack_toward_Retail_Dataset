@@ -75,7 +75,7 @@ class GroceryDataset(Dataset):
 class AdversarialLoader(DataLoader):
     def __init__(self, dataset, model, attack_type='pgd', *args, **kwargs):
         super().__init__(dataset, *args, **kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.model = model
         self.attack_type = attack_type
 
@@ -133,6 +133,7 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
     original_mode = model.training  # Store the original mode of the model
     model.eval()  # Set the model to evaluation mode temporarily
     model.to(device)
+    print(model.device)
     
     fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
     
