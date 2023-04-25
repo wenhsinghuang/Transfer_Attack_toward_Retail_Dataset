@@ -269,4 +269,13 @@ if __name__ == '__main__':
 
     print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
 
-    experiment(attack_type, attack_model_name, adv_examples_exist=adv_examples_exist)
+    # experiment(attack_type, attack_model_name, adv_examples_exist=adv_examples_exist)
+
+    experiment('pgd', 'ResNet18', adv_examples_exist=False)
+    experiment('l2_pgd', 'ResNet18', adv_examples_exist=False)
+    experiment('fgsm', 'ResNet18', adv_examples_exist=False)
+    experiment('l2_cw', 'ResNet18', adv_examples_exist=False)
+    experiment('pgd', 'ResNet50', adv_examples_exist=False)
+    experiment('l2_pgd', 'ResNet50', adv_examples_exist=False)
+    experiment('fgsm', 'ResNet50', adv_examples_exist=False)
+    experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
