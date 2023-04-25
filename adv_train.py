@@ -195,7 +195,7 @@ def generate_adversarial_examples(attack_model, save_images_folder):
     val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
 
     # Create the AdversarialLoader
-    val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attack_model, attack_type=attack_type, batch_size=batch_size, shuffle=False, num_workers=4)
+    val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attack_model, attack_type=attack_type, batch_size=batch_size, shuffle=False, num_workers=16)
 
     # Create a directory to store the adversarial images
     adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
