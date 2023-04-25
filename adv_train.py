@@ -13,6 +13,11 @@ import timm
 import copy
 from PIL import Image
 from tqdm import tqdm
+import os
+import numpy as np
+from PIL import Image
+import foolbox as fb
+from torch.utils.data import DataLoader
 
 
 """## Dataset Class"""
@@ -186,53 +191,30 @@ num_classes = len(set(train_grocery_dataset.img_labels))
 # ViT model
 
 # ResNet18 model
-resnet_model = resnet18(pretrained=True)
-resnet_model.fc = nn.Linear(resnet_model.fc.in_features, num_classes)
+# resnet_model = resnet18(pretrained=True)
+# resnet_model.fc = nn.Linear(resnet_model.fc.in_features, num_classes)
 
-# Modify the ViT model
-vit_model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=num_classes)
-vit_model.head = nn.Linear(vit_model.head.in_features, num_classes)
+# # Modify the ViT model
+# vit_model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=num_classes)
+# vit_model.head = nn.Linear(vit_model.head.in_features, num_classes)
 
-# ResNet50 model
-resnet50_model = resnet50(pretrained=True)
-resnet50_model.fc = nn.Linear(resnet50_model.fc.in_features, num_classes)
+# # ResNet50 model
+# resnet50_model = resnet50(pretrained=True)
+# resnet50_model.fc = nn.Linear(resnet50_model.fc.in_features, num_classes)
 
 
-criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss()
 
-# Set up the optimizer and learning rate scheduler for each model
-vit_optimizer = optim.SGD(vit_model.parameters(), lr=0.001, momentum=0.9)
-vit_scheduler = lr_scheduler.StepLR(vit_optimizer, step_size=7, gamma=0.1)
+# # Set up the optimizer and learning rate scheduler for each model
+# vit_optimizer = optim.SGD(vit_model.parameters(), lr=0.001, momentum=0.9)
+# vit_scheduler = lr_scheduler.StepLR(vit_optimizer, step_size=7, gamma=0.1)
 
-resnet_optimizer = optim.SGD(resnet_model.parameters(), lr=0.001, momentum=0.9)
-resnet_scheduler = lr_scheduler.StepLR(resnet_optimizer, step_size=7, gamma=0.1)
+# resnet_optimizer = optim.SGD(resnet_model.parameters(), lr=0.001, momentum=0.9)
+# resnet_scheduler = lr_scheduler.StepLR(resnet_optimizer, step_size=7, gamma=0.1)
 
 """## Load Trained ResNet18 model"""
 
-# restore training from best ckpt
-checkpoint_path = DIR_PATH + "ckpts/resnet18_checkpoint.pth"
 
-resnet_model, resnet_optimizer, resnet_scheduler, last_epoch = load_checkpoint_and_resume(
-    resnet_model, checkpoint_path)
-
-"""## Load Trained ResNet50 model"""
-
-# restore training from best ckpt
-
-
-
-checkpoint_path = DIR_PATH + "ckpts/resnet50_checkpoint.pth"
-
-resnet50_model, resnet50_optimizer, resnet50_scheduler, last_epoch = load_checkpoint_and_resume(
-    resnet50_model, checkpoint_path)
-
-"""## Load Trained ViT model"""
-
-# restore vit_model from best ckpt
-checkpoint_path = DIR_PATH + "ckpts/vit_checkpoint.pth"
-
-vit_model, vit_optimizer, vit_scheduler, last_epoch = load_checkpoint_and_resume(
-    vit_model, checkpoint_path)
 
 """# Evaluation"""
 
@@ -259,38 +241,22 @@ def evaluate_model(model, dataloader):
     accuracy = correct / total
     return accuracy
 
-"""## Clean Eval"""
+# """## Clean Eval"""
 
-# The Freiburg Groceries Dataset
-img_dir = DIR_PATH+'images/'
-val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
-val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
+# # The Freiburg Groceries Dataset
+# img_dir = DIR_PATH+'images/'
+# val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
+# val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
 
-# load dataset
-val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
+# # load dataset
+# val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
 
-# # load dataloader
-# val_loader = DataLoader(val_grocery_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
-
-# test_accuracy = evaluate_model(resnet_model, val_loader)
-# print()
-# print(f"ResNet eval accuracy: {test_accuracy:.4f}")
-
-# test_accuracy = evaluate_model(vit_model, val_loader)
-# print()
-# print(f"ViT eval accuracy: {test_accuracy:.4f}")
-
-# test_accuracy = evaluate_model(resnet50_model, val_loader)
-# print()
-# print(f"resnet50 eval accuracy: {test_accuracy:.4f}")
 
 """## AdversarialLoader & Noise Functions"""
-import os
-import numpy as np
-from PIL import Image
-import foolbox as fb
 
-def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10, device=torch.device('cpu')):
+
+
+def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10, device=torch.device('cpu')):
     original_mode = model.training  # Store the original mode of the model
     model.eval()  # Set the model to evaluation mode temporarily
     model.to(device)
@@ -316,7 +282,29 @@ def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_
     model.train(mode=original_mode)  # Revert the model to its original mode
     return adversarial_inputs
 
-from torch.utils.data import DataLoader
+
+def load_models():
+    # restore training from best ckpt
+    checkpoint_path = DIR_PATH + "ckpts/resnet18_checkpoint.pth"
+    resnet_model, resnet_optimizer, resnet_scheduler, last_epoch = load_checkpoint_and_resume(
+        resnet_model, checkpoint_path)
+
+    """## Load Trained ResNet50 model"""
+
+    # restore training from best ckpt
+    checkpoint_path = DIR_PATH + "ckpts/resnet50_checkpoint.pth"
+    resnet50_model, resnet50_optimizer, resnet50_scheduler, last_epoch = load_checkpoint_and_resume(
+        resnet50_model, checkpoint_path)
+
+    """## Load Trained ViT model"""
+
+    # restore vit_model from best ckpt
+    checkpoint_path = DIR_PATH + "ckpts/vit_checkpoint.pth"
+    vit_model, vit_optimizer, vit_scheduler, last_epoch = load_checkpoint_and_resume(
+        vit_model, checkpoint_path)
+    
+    return resnet_model, resnet50_model, vit_model
+
 
 class AdversarialLoader(DataLoader):
     def __init__(self, dataset, model, attack_type='pgd', *args, **kwargs):
@@ -327,69 +315,90 @@ class AdversarialLoader(DataLoader):
 
     def __iter__(self):
         for inputs, labels in super().__iter__():
-            adversarial_inputs = apply_pgd_attack(self.model, inputs, labels, attack_type=self.attack_type, device=self.device)
+            adversarial_inputs = apply_attack(self.model, inputs, labels, attack_type=self.attack_type, device=self.device)
             yield adversarial_inputs, labels
 
-"""## Save Adversarial Images"""
-
-# Create the AdversarialLoader
-attack_type='inf_pgd'
-attack_model_name = 'ResNet18'
-
-if attack_model_name == 'ResNet18':
-    attacked_model = resnet_model
-elif attack_model_name == 'ResNet50':
-    attacked_model = resnet50_model
-elif attack_model_name == 'VIT ':
-    attacked_model = vit_model
-save_images_folder= f"adversarial_images_{attack_model_name}_{attack_type}/"
-val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attacked_model, attack_type=attack_type, batch_size=64, shuffle=False, num_workers=4)
 
 
+def experiment(attack_type, attack_model_name):
+    # Load models
+    resnet_model, resnet50_model, vit_model = load_models()
+    # Load dataset that we want to generate adversarial examples
+    img_dir = DIR_PATH+'images/'
+    val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
+    val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
 
-# Create a directory to store the adversarial images
-adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
-# print(adversarial_images_dir)
-if not os.path.exists(adversarial_images_dir):
-    os.makedirs(adversarial_images_dir)
+    # load dataset
+    val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
 
-# Extract mean and std for denormalization from data_transforms
-normalize_transform = data_transforms['val'].transforms[-1]
-mean = np.array(normalize_transform.mean)
-std = np.array(normalize_transform.std)
+    # Generate Adversarial Examples:
 
-# Save the adversarial images and their labels to the directory
-counter = 0
-with open(adversarial_images_dir+"labels.txt", "w") as labels_file:
-    for adversarial_inputs, labels in tqdm(val_adversarial_loader, desc='adversarial'):
-        for img, label in zip(adversarial_inputs, labels):
-            img_np = img.cpu().numpy()
-            img_denorm = (img_np * std[:, None, None] + mean[:, None, None]).transpose((1, 2, 0))
-            # img_denorm = np.clip(img_denorm, 0, 1)  # Clip values to the range [0, 1]
-            img_denorm = (img_denorm * 255).astype("uint8")
+    # Create the AdversarialLoader
+    attack_type='inf_pgd'
+    attack_model_name = 'ResNet18'
 
-            img_pil = Image.fromarray(img_denorm)
-            img_pil.save(os.path.join(adversarial_images_dir, f"adversarial_image_{counter}.png"))
+    if attack_model_name == 'ResNet18':
+        attacked_model = resnet_model
+    elif attack_model_name == 'ResNet50':
+        attacked_model = resnet50_model
+    elif attack_model_name == 'VIT ':
+        attacked_model = vit_model
+    save_images_folder= f"adversarial_images_{attack_model_name}_{attack_type}/"
+    val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attacked_model, attack_type=attack_type, batch_size=64, shuffle=False, num_workers=4)
 
-            # Save the label to the text file
-            labels_file.write(f"adversarial_image_{counter}.png {label.item()}\n")
+    # Create a directory to store the adversarial images
+    adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
+    # print(adversarial_images_dir)
+    if not os.path.exists(adversarial_images_dir):
+        os.makedirs(adversarial_images_dir)
+
+    # Extract mean and std for denormalization from data_transforms
+    normalize_transform = data_transforms['val'].transforms[-1]
+    mean = np.array(normalize_transform.mean)
+    std = np.array(normalize_transform.std)
+
+    # Save the adversarial images and their labels to the directory
+    counter = 0
+    with open(adversarial_images_dir+"labels.txt", "w") as labels_file:
+        for adversarial_inputs, labels in tqdm(val_adversarial_loader, desc='adversarial'):
+            for img, label in zip(adversarial_inputs, labels):
+                img_np = img.cpu().numpy()
+                img_denorm = (img_np * std[:, None, None] + mean[:, None, None]).transpose((1, 2, 0))
+                # img_denorm = np.clip(img_denorm, 0, 1)  # Clip values to the range [0, 1]
+                img_denorm = (img_denorm * 255).astype("uint8")
+
+                img_pil = Image.fromarray(img_denorm)
+                img_pil.save(os.path.join(adversarial_images_dir, f"adversarial_image_{counter}.png"))
+
+                # Save the label to the text file
+                labels_file.write(f"adversarial_image_{counter}.png {label.item()}\n")
 
             counter += 1
 
-"""## Adversarial evaluation"""
+    # Evaluation
 
-adv_files = [DIR_PATH+ f'{save_images_folder}/labels.txt']
-adv_img_dir = DIR_PATH+ f'{save_images_folder}/'
-val_adversarial_dataset = GroceryDataset(adv_files, adv_img_dir, data_transforms['val'])
-val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
+    adv_files = [DIR_PATH+ f'{save_images_folder}/labels.txt']
+    adv_img_dir = DIR_PATH+ f'{save_images_folder}/'
+    val_adversarial_dataset = GroceryDataset(adv_files, adv_img_dir, data_transforms['val'])
+    val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
 
-# Evaluate the model on the adversarial examples
-resnet_adversarial_accuracy = evaluate_model(resnet_model, val_adversarial_loader)
-print(f'ResNet18 model accuracy on adversarial examples: {resnet_adversarial_accuracy * 100:.2f}%')
+    # Evaluate the model on the adversarial examples
+    resnet_adversarial_accuracy = evaluate_model(resnet_model, val_adversarial_loader)
+    print(f'ResNet18 model accuracy on adversarial examples: {resnet_adversarial_accuracy * 100:.2f}%')
 
-# Evaluate the model on the adversarial examples
-resnet50_adversarial_accuracy = evaluate_model(resnet50_model, val_adversarial_loader)
-print(f'ResNet50 model accuracy on adversarial examples: {resnet50_adversarial_accuracy * 100:.2f}%')
+    # Evaluate the model on the adversarial examples
+    resnet50_adversarial_accuracy = evaluate_model(resnet50_model, val_adversarial_loader)
+    print(f'ResNet50 model accuracy on adversarial examples: {resnet50_adversarial_accuracy * 100:.2f}%')
 
-vit_adversarial_accuracy = evaluate_model(vit_model, val_adversarial_loader)
-print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
+    vit_adversarial_accuracy = evaluate_model(vit_model, val_adversarial_loader)
+    print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
+
+
+if __name__ == '__main__':
+    attack_type='inf_pgd'
+    attack_model_name = 'ResNet18'
+
+    print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
+
+
+
