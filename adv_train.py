@@ -238,6 +238,7 @@ def experiment(attack_type, attack_model_name, adv_examples_exist=False):
 
     # Generate adversarial example if needed
     if adv_examples_exist == False:
+        print('Generate adversarial examples...')
         generate_adversarial_examples(attacked_model, save_images_folder)
 
     # Evaluate the model on the adversarial examples
