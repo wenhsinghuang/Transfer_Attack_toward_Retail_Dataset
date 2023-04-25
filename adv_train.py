@@ -39,6 +39,7 @@ import copy
 from PIL import Image
 from tqdm import tqdm
 
+
 """## Dataset Class"""
 
 class GroceryDataset(Dataset):
@@ -311,6 +312,7 @@ val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transf
 """## AdversarialLoader & Noise Functions"""
 
 import foolbox as fb
+from art.attacks.evasion import CarliniL2Method
 
 def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10, device=torch.device('cpu')):
     original_mode = model.training  # Store the original mode of the model
@@ -327,6 +329,8 @@ def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_
         attack = fb.attacks.FGSM()
     elif attack_type == 'inf_pgd':
         attack = fb.attacks.LinfPGD()
+    elif attack_type == 'l2_cw':
+        attack = CarliniL2Method()
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
     
@@ -354,7 +358,7 @@ class AdversarialLoader(DataLoader):
 """## Save Adversarial Images"""
 
 # Create the AdversarialLoader
-attack_type='inf_pgd'
+attack_type='l2_cw'
 attack_model_name = 'ResNet18'
 
 if attack_model_name == 'ResNet18':
