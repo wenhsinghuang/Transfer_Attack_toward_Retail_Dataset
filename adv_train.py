@@ -20,8 +20,6 @@ import foolbox as fb
 from torch.utils.data import DataLoader
 
 
-
-
 DIR_PATH = "./"
 batch_size = 256
 num_classes = 25
@@ -41,13 +39,6 @@ data_transforms = {
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
 }
-
-
-
-
-
-
-"""## Dataset Class"""
 
 class GroceryDataset(Dataset):
     def __init__(self, annotations_files, img_dir, transform=None, target_transform=None):
@@ -80,77 +71,17 @@ class GroceryDataset(Dataset):
         # print("After normalization:", image.min().item(), image.max().item())  # Add this line
         return image, label
 
+class AdversarialLoader(DataLoader):
+    def __init__(self, dataset, model, attack_type='pgd', *args, **kwargs):
+        super().__init__(dataset, *args, **kwargs)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model = model
+        self.attack_type = attack_type
 
-
-def train_model(model, model_name, criterion, optimizer, scheduler, train_dataloader, val_dataloader, num_epochs=25, start_epoch=0):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
-
-    for epoch in range(start_epoch, num_epochs):
-        print(f'Epoch {epoch}/{num_epochs - 1}')
-
-        # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
-            if phase == 'train':
-                model.train()
-                dataloader = train_dataloader
-                dataset_size = len(train_dataloader.dataset)
-            else:
-                model.eval()
-                dataloader = val_dataloader
-                dataset_size = len(val_dataloader.dataset)
-
-            running_loss = 0.0
-            running_corrects = 0
-
-            for inputs, labels in dataloader:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-
-                optimizer.zero_grad()
-
-                with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels)
-
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
-
-                running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
-
-            if phase == 'train':
-                scheduler.step()
-
-            epoch_loss = running_loss / dataset_size
-            epoch_acc = running_corrects.double() / dataset_size
-
-            print(f'{phase.capitalize()} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
-
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    'scheduler_state_dict': scheduler.state_dict(),
-                    'loss': criterion,
-                }, DIR_PATH + f'{model_name}/{model_name}_checkpoint.pth')
-
-        print()
-
-    print(f'Best val Acc: {best_acc:.4f}')
-
-    # Load the best model weights
-    model.load_state_dict(best_model_wts)
-    return model
-
+    def __iter__(self):
+        for inputs, labels in super().__iter__():
+            adversarial_inputs = apply_attack(self.model, inputs, labels, attack_type=self.attack_type, device=self.device)
+            yield adversarial_inputs, labels
 
 def load_checkpoint_and_resume(model, checkpoint_path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -176,55 +107,6 @@ def load_checkpoint_and_resume(model, checkpoint_path):
 
     return model, optimizer, scheduler, last_epoch
 
-
-class AdversarialLoader(DataLoader):
-    def __init__(self, dataset, model, attack_type='pgd', *args, **kwargs):
-        super().__init__(dataset, *args, **kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.model = model
-        self.attack_type = attack_type
-
-    def __iter__(self):
-        for inputs, labels in super().__iter__():
-            adversarial_inputs = apply_attack(self.model, inputs, labels, attack_type=self.attack_type, device=self.device)
-            yield adversarial_inputs, labels
-            
-# The Freiburg Groceries Dataset
-# img_dir = DIR_PATH+'images/'
-# train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
-# train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
-
-# # load dataset
-# train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
-
-# # load dataloader
-# train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
-
-# """# Load Pre-Trained Model"""
-
-# # Get the number of unique classes in your dataset
-# num_classes = len(set(train_grocery_dataset.img_labels))
-print(num_classes)
-
-
-
-
-
-# criterion = nn.CrossEntropyLoss()
-
-# # Set up the optimizer and learning rate scheduler for each model
-# vit_optimizer = optim.SGD(vit_model.parameters(), lr=0.001, momentum=0.9)
-# vit_scheduler = lr_scheduler.StepLR(vit_optimizer, step_size=7, gamma=0.1)
-
-# resnet_optimizer = optim.SGD(resnet_model.parameters(), lr=0.001, momentum=0.9)
-# resnet_scheduler = lr_scheduler.StepLR(resnet_optimizer, step_size=7, gamma=0.1)
-
-"""## Load Trained ResNet18 model"""
-
-
-
-"""# Evaluation"""
-
 def evaluate_model(model, dataloader):
     model.eval()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -247,21 +129,6 @@ def evaluate_model(model, dataloader):
 
     accuracy = correct / total
     return accuracy
-
-# """## Clean Eval"""
-
-# # The Freiburg Groceries Dataset
-# img_dir = DIR_PATH+'images/'
-# val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
-# val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
-
-# # load dataset
-# val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
-
-
-"""## AdversarialLoader & Noise Functions"""
-
-
 
 def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10, device=torch.device('cpu')):
     original_mode = model.training  # Store the original mode of the model
@@ -288,7 +155,6 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
     
     model.train(mode=original_mode)  # Revert the model to its original mode
     return adversarial_inputs
-
 
 def load_models():
     # Create models
@@ -317,14 +183,7 @@ def load_models():
     
     return resnet_model, resnet50_model, vit_model
 
-
-
-
-
-
-def experiment(attack_type, attack_model_name):
-    # Load models
-    resnet_model, resnet50_model, vit_model = load_models()
+def generate_adversarial_examples(attack_model, save_images_folder):
     # Load dataset that we want to generate adversarial examples
     img_dir = DIR_PATH+'images/'
     val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
@@ -333,24 +192,11 @@ def experiment(attack_type, attack_model_name):
     # load dataset
     val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
 
-    # Generate Adversarial Examples:
-
     # Create the AdversarialLoader
-    attack_type='inf_pgd'
-    attack_model_name = 'ResNet18'
-
-    if attack_model_name == 'ResNet18':
-        attacked_model = resnet_model
-    elif attack_model_name == 'ResNet50':
-        attacked_model = resnet50_model
-    elif attack_model_name == 'VIT ':
-        attacked_model = vit_model
-    save_images_folder= f"adversarial_images_{attack_model_name}_{attack_type}/"
-    val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attacked_model, attack_type=attack_type, batch_size=64, shuffle=False, num_workers=4)
+    val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attack_model, attack_type=attack_type, batch_size=64, shuffle=False, num_workers=4)
 
     # Create a directory to store the adversarial images
     adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
-    # print(adversarial_images_dir)
     if not os.path.exists(adversarial_images_dir):
         os.makedirs(adversarial_images_dir)
 
@@ -377,30 +223,41 @@ def experiment(attack_type, attack_model_name):
 
             counter += 1
 
-    # Evaluation
+def experiment(attack_type, attack_model_name, adv_examples_exist=False):
+    # Load models
+    resnet_model, resnet50_model, vit_model = load_models()
+    if attack_model_name == 'ResNet18':
+        attacked_model = resnet_model
+    elif attack_model_name == 'ResNet50':
+        attacked_model = resnet50_model
+    elif attack_model_name == 'VIT ':
+        attacked_model = vit_model
+    else:
+        raise ValueError(f"Unsupported model: {attack_model_name}")
+    save_images_folder= f"adversarial_images_{attack_model_name}_{attack_type}/"
 
+    # Generate adversarial example if needed
+    if adv_examples_exist == False:
+        generate_adversarial_examples(attacked_model, save_images_folder)
+
+    # Evaluate the model on the adversarial examples
     adv_files = [DIR_PATH+ f'{save_images_folder}/labels.txt']
     adv_img_dir = DIR_PATH+ f'{save_images_folder}/'
     val_adversarial_dataset = GroceryDataset(adv_files, adv_img_dir, data_transforms['val'])
     val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
 
-    # Evaluate the model on the adversarial examples
     resnet_adversarial_accuracy = evaluate_model(resnet_model, val_adversarial_loader)
     print(f'ResNet18 model accuracy on adversarial examples: {resnet_adversarial_accuracy * 100:.2f}%')
-
-    # Evaluate the model on the adversarial examples
     resnet50_adversarial_accuracy = evaluate_model(resnet50_model, val_adversarial_loader)
     print(f'ResNet50 model accuracy on adversarial examples: {resnet50_adversarial_accuracy * 100:.2f}%')
-
     vit_adversarial_accuracy = evaluate_model(vit_model, val_adversarial_loader)
     print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
-
 
 if __name__ == '__main__':
     attack_type='inf_pgd'
     attack_model_name = 'ResNet18'
+    adv_examples_exist = True
 
     print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
 
     experiment(attack_type, attack_model_name)
-
