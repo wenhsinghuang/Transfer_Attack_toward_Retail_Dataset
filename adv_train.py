@@ -261,4 +261,4 @@ if __name__ == '__main__':
 
     print(f'Cross-model attacks experiment: Generate {attack_type} attack from {attack_model_name} model')
 
-    experiment(attack_type, attack_model_name)
+    experiment(attack_type, attack_model_name, adv_examples_exist=adv_examples_exist)
