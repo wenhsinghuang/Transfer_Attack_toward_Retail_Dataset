@@ -151,6 +151,7 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
         raise ValueError(f"Unsupported attack type: {attack_type}")
     
     with torch.enable_grad():  # Enable gradients for the attack
+        print('apply')
         adversarial_inputs, success, _ = attack(fmodel, inputs.to(device), labels.to(device), epsilons=epsilon)
     
     model.train(mode=original_mode)  # Revert the model to its original mode
