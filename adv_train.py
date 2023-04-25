@@ -129,12 +129,12 @@ def evaluate_model(model, dataloader):
     accuracy = correct / total
     return accuracy
 
-def apply_attack(fmodel, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10):
-    # original_mode = model.training  # Store the original mode of the model
-    # model.eval()  # Set the model to evaluation mode temporarily
-    # model.to(device)
+def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10):
+    original_mode = model.training  # Store the original mode of the model
+    model.eval()  # Set the model to evaluation mode temporarily
+    model.to(device)
     
-    # fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
+    fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
     
     if attack_type == 'pgd':
         attack = fb.attacks.LinfPGD(steps=nb_iter, abs_stepsize=epsilon / 4)
@@ -155,7 +155,7 @@ def apply_attack(fmodel, inputs, labels, attack_type='pgd', epsilon=0.03, nb_ite
         # adversarial_inputs = attack(fmodel, inputs.to(device), labels.to(device), criterion=fb.criteria.Misclassification())
 
     
-    # model.train(mode=original_mode)  # Revert the model to its original mode
+    model.train(mode=original_mode)  # Revert the model to its original mode
     return adversarial_inputs
 
 def load_models():
@@ -195,7 +195,7 @@ def generate_adversarial_examples(attack_model, save_images_folder):
     val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
 
     # Create the AdversarialLoader
-    val_data_loader = DataLoader(val_grocery_dataset, batch_size=batch_size, shuffle=False, num_workers=8)
+    val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attack_model, attack_type=attack_type, batch_size=batch_size, shuffle=False, num_workers=4)
 
     # Create a directory to store the adversarial images
     adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
@@ -209,16 +209,9 @@ def generate_adversarial_examples(attack_model, save_images_folder):
 
     # Save the adversarial images and their labels to the directory
     counter = 0
-    fmodel = fb.PyTorchModel(attack_model, bounds=(-2.2, 2.8))
-    
     with open(adversarial_images_dir+"labels.txt", "w") as labels_file:
-        for inputs, labels in tqdm(val_data_loader, desc='adversarial'):
-            for img, label in zip(inputs, labels):
-                # model.to(device)
-                img = img.unsqueeze(0)
-                img = apply_attack(fmodel, img, label, attack_type=attack_type)
-
-
+        for adversarial_inputs, labels in tqdm(val_adversarial_loader, desc='adversarial'):
+            for img, label in zip(adversarial_inputs, labels):
                 img_np = img.cpu().numpy()
                 img_denorm = (img_np * std[:, None, None] + mean[:, None, None]).transpose((1, 2, 0))
                 # img_denorm = np.clip(img_denorm, 0, 1)  # Clip values to the range [0, 1]
@@ -231,45 +224,6 @@ def generate_adversarial_examples(attack_model, save_images_folder):
                 labels_file.write(f"adversarial_image_{counter}.png {label.item()}\n")
 
             counter += 1
-# def generate_adversarial_examples(attack_model, save_images_folder):
-#     # Load dataset that we want to generate adversarial examples
-#     img_dir = DIR_PATH+'images/'
-#     val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
-#     val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
-
-#     # load dataset
-#     val_grocery_dataset = GroceryDataset(val_annotations_files, img_dir, data_transforms['val'])
-
-#     # Create the AdversarialLoader
-#     val_adversarial_loader = AdversarialLoader(val_grocery_dataset, attack_model, attack_type=attack_type, batch_size=batch_size, shuffle=False, num_workers=4)
-
-#     # Create a directory to store the adversarial images
-#     adversarial_images_dir = os.path.join(DIR_PATH, save_images_folder)
-#     if not os.path.exists(adversarial_images_dir):
-#         os.makedirs(adversarial_images_dir)
-
-#     # Extract mean and std for denormalization from data_transforms
-#     normalize_transform = data_transforms['val'].transforms[-1]
-#     mean = np.array(normalize_transform.mean)
-#     std = np.array(normalize_transform.std)
-
-#     # Save the adversarial images and their labels to the directory
-#     counter = 0
-#     with open(adversarial_images_dir+"labels.txt", "w") as labels_file:
-#         for adversarial_inputs, labels in tqdm(val_adversarial_loader, desc='adversarial'):
-#             for img, label in zip(adversarial_inputs, labels):
-#                 img_np = img.cpu().numpy()
-#                 img_denorm = (img_np * std[:, None, None] + mean[:, None, None]).transpose((1, 2, 0))
-#                 # img_denorm = np.clip(img_denorm, 0, 1)  # Clip values to the range [0, 1]
-#                 img_denorm = (img_denorm * 255).astype("uint8")
-
-#                 img_pil = Image.fromarray(img_denorm)
-#                 img_pil.save(os.path.join(adversarial_images_dir, f"adversarial_image_{counter}.png"))
-
-#                 # Save the label to the text file
-#                 labels_file.write(f"adversarial_image_{counter}.png {label.item()}\n")
-
-#             counter += 1
 
 def experiment(attack_type, attack_model_name, adv_examples_exist=False):
     # Load models
