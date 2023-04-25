@@ -188,19 +188,7 @@ train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=
 # Get the number of unique classes in your dataset
 num_classes = len(set(train_grocery_dataset.img_labels))
 
-# ViT model
 
-# ResNet18 model
-# resnet_model = resnet18(pretrained=True)
-# resnet_model.fc = nn.Linear(resnet_model.fc.in_features, num_classes)
-
-# # Modify the ViT model
-# vit_model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=num_classes)
-# vit_model.head = nn.Linear(vit_model.head.in_features, num_classes)
-
-# # ResNet50 model
-# resnet50_model = resnet50(pretrained=True)
-# resnet50_model.fc = nn.Linear(resnet50_model.fc.in_features, num_classes)
 
 
 # criterion = nn.CrossEntropyLoss()
@@ -284,6 +272,14 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
 
 
 def load_models():
+    # Create models
+    resnet_model = resnet18(pretrained=True)
+    resnet_model.fc = nn.Linear(resnet_model.fc.in_features, num_classes)
+    resnet50_model = resnet50(pretrained=True)
+    resnet50_model.fc = nn.Linear(resnet50_model.fc.in_features, num_classes)
+    vit_model = timm.create_model('vit_base_patch16_224', pretrained=True, num_classes=num_classes)
+    vit_model.head = nn.Linear(vit_model.head.in_features, num_classes)
+
     # restore training from best ckpt
     checkpoint_path = DIR_PATH + "ckpts/resnet18_checkpoint.pth"
     resnet_model, resnet_optimizer, resnet_scheduler, last_epoch = load_checkpoint_and_resume(
