@@ -245,7 +245,7 @@ def experiment(attack_type, attack_model_name, adv_examples_exist=False):
     adv_files = [DIR_PATH+ f'{save_images_folder}/labels.txt']
     adv_img_dir = DIR_PATH+ f'{save_images_folder}/'
     val_adversarial_dataset = GroceryDataset(adv_files, adv_img_dir, data_transforms['val'])
-    val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=1, shuffle=False, num_workers=8)
+    val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=8, shuffle=False, num_workers=8)
 
     resnet_adversarial_accuracy = evaluate_model(resnet_model, val_adversarial_loader)
     print(f'ResNet18 model accuracy on adversarial examples: {resnet_adversarial_accuracy * 100:.2f}%')
