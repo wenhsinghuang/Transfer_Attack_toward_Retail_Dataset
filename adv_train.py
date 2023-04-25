@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 
 DIR_PATH = "./"
 batch_size = 256
+num_classes = 25
 
 # transform
 data_transforms = {
@@ -176,21 +177,33 @@ def load_checkpoint_and_resume(model, checkpoint_path):
     return model, optimizer, scheduler, last_epoch
 
 
+class AdversarialLoader(DataLoader):
+    def __init__(self, dataset, model, attack_type='pgd', *args, **kwargs):
+        super().__init__(dataset, *args, **kwargs)
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model = model
+        self.attack_type = attack_type
+
+    def __iter__(self):
+        for inputs, labels in super().__iter__():
+            adversarial_inputs = apply_attack(self.model, inputs, labels, attack_type=self.attack_type, device=self.device)
+            yield adversarial_inputs, labels
+            
 # The Freiburg Groceries Dataset
-img_dir = DIR_PATH+'images/'
-train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
-train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
+# img_dir = DIR_PATH+'images/'
+# train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
+# train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
 
-# load dataset
-train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
+# # load dataset
+# train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
 
-# load dataloader
-train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
+# # load dataloader
+# train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
-"""# Load Pre-Trained Model"""
+# """# Load Pre-Trained Model"""
 
-# Get the number of unique classes in your dataset
-num_classes = len(set(train_grocery_dataset.img_labels))
+# # Get the number of unique classes in your dataset
+# num_classes = len(set(train_grocery_dataset.img_labels))
 print(num_classes)
 
 
@@ -305,17 +318,7 @@ def load_models():
     return resnet_model, resnet50_model, vit_model
 
 
-class AdversarialLoader(DataLoader):
-    def __init__(self, dataset, model, attack_type='pgd', *args, **kwargs):
-        super().__init__(dataset, *args, **kwargs)
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.model = model
-        self.attack_type = attack_type
 
-    def __iter__(self):
-        for inputs, labels in super().__iter__():
-            adversarial_inputs = apply_attack(self.model, inputs, labels, attack_type=self.attack_type, device=self.device)
-            yield adversarial_inputs, labels
 
 
 
