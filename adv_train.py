@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader
 
 
 DIR_PATH = "./"
-batch_size = 256
+batch_size = 64
 num_classes = 25
 
 # transform
