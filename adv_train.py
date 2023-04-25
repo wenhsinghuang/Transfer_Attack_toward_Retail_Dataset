@@ -43,21 +43,7 @@ data_transforms = {
 
 
 
-# The Freiburg Groceries Dataset
-# img_dir = DIR_PATH+'images/'
-# train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
-# train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
 
-# # load dataset
-# train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
-
-# # load dataloader
-# train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
-
-"""# Load Pre-Trained Model"""
-
-# # Get the number of unique classes in your dataset
-# num_classes = len(set(train_grocery_dataset.img_labels))
 
 
 """## Dataset Class"""
@@ -190,7 +176,22 @@ def load_checkpoint_and_resume(model, checkpoint_path):
     return model, optimizer, scheduler, last_epoch
 
 
+# The Freiburg Groceries Dataset
+img_dir = DIR_PATH+'images/'
+train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
+train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
 
+# load dataset
+train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
+
+# load dataloader
+train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
+
+"""# Load Pre-Trained Model"""
+
+# Get the number of unique classes in your dataset
+num_classes = len(set(train_grocery_dataset.img_labels))
+print(num_classes)
 
 
 
