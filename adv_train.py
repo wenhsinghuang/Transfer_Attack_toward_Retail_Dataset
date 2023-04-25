@@ -250,10 +250,10 @@ def experiment(attack_type, attack_model_name, adv_examples_exist=False):
     val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=1, shuffle=False, num_workers=8)
 
     # DEBUG
-    val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
-    val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
-    val_adversarial_dataset = GroceryDataset(val_annotations_files, DIR_PATH+'images/', data_transforms['val'])
-    val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=1, shuffle=False, num_workers=8)
+    # val_annotations_files = ['splits/test0.txt','splits/test1.txt','splits/test2.txt','splits/test3.txt','splits/test4.txt']
+    # val_annotations_files = [DIR_PATH+x for x in val_annotations_files]
+    # val_adversarial_dataset = GroceryDataset(val_annotations_files, DIR_PATH+'images/', data_transforms['val'])
+    # val_adversarial_loader = DataLoader(val_adversarial_dataset, batch_size=1, shuffle=False, num_workers=8)
 
     resnet_adversarial_accuracy = evaluate_model(resnet_model, val_adversarial_loader)
     print(f'ResNet18 model accuracy on adversarial examples: {resnet_adversarial_accuracy * 100:.2f}%')
