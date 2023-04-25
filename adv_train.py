@@ -149,7 +149,7 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
         attack = fb.attacks.L2CarliniWagnerAttack()
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
-    
+    print(labels)
     with torch.enable_grad():  # Enable gradients for the attack
         # adversarial_inputs, success, _ = attack(fmodel, inputs.to(device), labels.to(device), epsilons=epsilon)
         adversarial_inputs = attack(fmodel, inputs.to(device), labels.to(device), criterion=fb.criteria.Misclassification())
