@@ -215,8 +215,8 @@ def generate_adversarial_examples(attack_model, save_images_folder):
         for inputs, labels in tqdm(val_data_loader, desc='adversarial'):
             for img, label in zip(inputs, labels):
                 # model.to(device)
-    
-                apply_attack(fmodel, img, label, attack_type=attack_type)
+                img = img.unsqueeze(0)
+                img = apply_attack(fmodel, img, label, attack_type=attack_type)
 
 
                 img_np = img.cpu().numpy()
