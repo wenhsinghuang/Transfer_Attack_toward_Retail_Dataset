@@ -329,6 +329,7 @@ def apply_pgd_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_
     elif attack_type == 'inf_pgd':
         attack = fb.attacks.LinfPGD()
     elif attack_type == 'l2_cw':
+        print('sjdkfljsdkl;f')
         attack = fb.attacks.L2CarliniWagnerAttack()
     else:
         raise ValueError(f"Unsupported attack type: {attack_type}")
