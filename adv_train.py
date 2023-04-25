@@ -255,7 +255,7 @@ def experiment(attack_type, attack_model_name, adv_examples_exist=False):
     print(f'ViT model accuracy on adversarial examples: {vit_adversarial_accuracy * 100:.2f}%')
 
 if __name__ == '__main__':
-    attack_type='pgd'
+    attack_type='l2_cw'
     attack_model_name = 'ResNet18'
     adv_examples_exist = True
 
