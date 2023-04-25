@@ -20,6 +20,46 @@ import foolbox as fb
 from torch.utils.data import DataLoader
 
 
+
+
+DIR_PATH = "./"
+batch_size = 256
+
+# transform
+data_transforms = {
+    'train': transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]),
+    'val': transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]),
+}
+
+
+
+# The Freiburg Groceries Dataset
+# img_dir = DIR_PATH+'images/'
+# train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
+# train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
+
+# # load dataset
+# train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
+
+# # load dataloader
+# train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
+
+"""# Load Pre-Trained Model"""
+
+# # Get the number of unique classes in your dataset
+# num_classes = len(set(train_grocery_dataset.img_labels))
+
+
 """## Dataset Class"""
 
 class GroceryDataset(Dataset):
@@ -53,7 +93,7 @@ class GroceryDataset(Dataset):
         # print("After normalization:", image.min().item(), image.max().item())  # Add this line
         return image, label
 
-"""## Model"""
+
 
 def train_model(model, model_name, criterion, optimizer, scheduler, train_dataloader, val_dataloader, num_epochs=25, start_epoch=0):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -124,7 +164,6 @@ def train_model(model, model_name, criterion, optimizer, scheduler, train_datalo
     model.load_state_dict(best_model_wts)
     return model
 
-"""## Restore Model"""
 
 def load_checkpoint_and_resume(model, checkpoint_path):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -150,43 +189,9 @@ def load_checkpoint_and_resume(model, checkpoint_path):
 
     return model, optimizer, scheduler, last_epoch
 
-"""# Load Dataset"""
 
-DIR_PATH = "./"
 
-# transform
-data_transforms = {
-    'train': transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-    'val': transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-}
 
-batch_size = 256
-
-# The Freiburg Groceries Dataset
-img_dir = DIR_PATH+'images/'
-train_annotations_files = ['splits/train0.txt','splits/train1.txt','splits/train2.txt','splits/train3.txt','splits/train4.txt']
-train_annotations_files = [DIR_PATH+x for x in train_annotations_files]
-
-# load dataset
-train_grocery_dataset = GroceryDataset(train_annotations_files, img_dir, data_transforms['train'])
-
-# load dataloader
-train_loader = DataLoader(train_grocery_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
-
-"""# Load Pre-Trained Model"""
-
-# Get the number of unique classes in your dataset
-num_classes = len(set(train_grocery_dataset.img_labels))
 
 
 
@@ -282,22 +287,19 @@ def load_models():
 
     # restore training from best ckpt
     checkpoint_path = DIR_PATH + "ckpts/resnet18_checkpoint.pth"
-    resnet_model, resnet_optimizer, resnet_scheduler, last_epoch = load_checkpoint_and_resume(
-        resnet_model, checkpoint_path)
+    resnet_model, _, _, _ = load_checkpoint_and_resume(resnet_model, checkpoint_path)
 
     """## Load Trained ResNet50 model"""
 
     # restore training from best ckpt
     checkpoint_path = DIR_PATH + "ckpts/resnet50_checkpoint.pth"
-    resnet50_model, resnet50_optimizer, resnet50_scheduler, last_epoch = load_checkpoint_and_resume(
-        resnet50_model, checkpoint_path)
+    resnet50_model, _, _, _ = load_checkpoint_and_resume(resnet50_model, checkpoint_path)
 
     """## Load Trained ViT model"""
 
     # restore vit_model from best ckpt
     checkpoint_path = DIR_PATH + "ckpts/vit_checkpoint.pth"
-    vit_model, vit_optimizer, vit_scheduler, last_epoch = load_checkpoint_and_resume(
-        vit_model, checkpoint_path)
+    vit_model, _, _, _ = load_checkpoint_and_resume(vit_model, checkpoint_path)
     
     return resnet_model, resnet50_model, vit_model
 
