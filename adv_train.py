@@ -223,7 +223,7 @@ def generate_adversarial_examples(attack_model, save_images_folder):
                 # Save the label to the text file
                 labels_file.write(f"adversarial_image_{counter}.png {label.item()}\n")
 
-            counter += 1
+                counter += 1
 
 def experiment(attack_type, attack_model_name, adv_examples_exist=False):
     # Load models
