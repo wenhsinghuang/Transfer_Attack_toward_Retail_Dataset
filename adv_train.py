@@ -134,16 +134,15 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
     model.eval()  # Set the model to evaluation mode temporarily
     model = model.to(device)
     
-    fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
+    # fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
+    fmodel = fb.PyTorchModel(model, bounds=(0, 1))
     
     if attack_type == 'pgd':
-        attack = fb.attacks.LinfPGD()
+        attack = fb.attacks.LinfPGD(eps=0.2, steps=10)
     elif attack_type == 'l2_pgd':
         attack = fb.attacks.L2ProjectedGradientDescentAttack()
     elif attack_type == 'fgsm':
         attack = fb.attacks.FGSM()
-    elif attack_type == 'inf_pgd':
-        attack = fb.attacks.LinfPGD()
     elif attack_type == 'l2_cw':
         attack = fb.attacks.L2CarliniWagnerAttack(steps=1000)
     elif attack_type == 'mia':
@@ -282,4 +281,4 @@ if __name__ == '__main__':
     # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
     # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
 
-    experiment('l2_pgd', 'VIT', adv_examples_exist=False)
+    experiment('pgd', 'VIT', adv_examples_exist=False)
