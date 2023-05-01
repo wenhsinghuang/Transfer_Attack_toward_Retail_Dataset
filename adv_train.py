@@ -129,7 +129,7 @@ def evaluate_model(model, dataloader):
     accuracy = correct / total
     return accuracy
 
-def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=100):
+def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.2, nb_iter=100):
     original_mode = model.training  # Store the original mode of the model
     model.eval()  # Set the model to evaluation mode temporarily
     model = model.to(device)
@@ -140,7 +140,7 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
     if attack_type == 'pgd':
         attack = fb.attacks.LinfPGD(steps=10)
     elif attack_type == 'l2_pgd':
-        attack = fb.attacks.L2ProjectedGradientDescentAttack(eps=0.2, steps=10)
+        attack = fb.attacks.L2ProjectedGradientDescentAttack(steps=10)
     elif attack_type == 'fgsm':
         attack = fb.attacks.FGSM()
     elif attack_type == 'l2_cw':
@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
     # experiment(attack_type, attack_model_name, adv_examples_exist=adv_examples_exist)
 
-    # experiment('pgd', 'ResNet18', adv_examples_exist=False)
+    experiment('pgd', 'ResNet18', adv_examples_exist=False)
     # experiment('l2_pgd', 'ResNet18', adv_examples_exist=False)
     # experiment('fgsm', 'ResNet18', adv_examples_exist=False)
     # experiment('l2_cw', 'ResNet18', adv_examples_exist=False)
@@ -281,4 +281,4 @@ if __name__ == '__main__':
     # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
     # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
 
-    experiment('pgd', 'VIT', adv_examples_exist=False)
+    # experiment('pgd', 'VIT', adv_examples_exist=False)
