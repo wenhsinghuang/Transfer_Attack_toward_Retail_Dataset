@@ -137,9 +137,9 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter
     fmodel = fb.PyTorchModel(model, bounds=(-2.2, 2.8))
     
     if attack_type == 'pgd':
-        attack = fb.attacks.LinfPGD(steps=nb_iter, abs_stepsize=epsilon / 4)
+        attack = fb.attacks.LinfPGD()
     elif attack_type == 'l2_pgd':
-        attack = fb.attacks.L2ProjectedGradientDescentAttack(rel_stepsize=0.025, abs_stepsize=None, steps=nb_iter, random_start=True)
+        attack = fb.attacks.L2ProjectedGradientDescentAttack()
     elif attack_type == 'fgsm':
         attack = fb.attacks.FGSM()
     elif attack_type == 'inf_pgd':
