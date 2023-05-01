@@ -281,7 +281,7 @@ if __name__ == '__main__':
     # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
     # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
 
-    experiment('pgd', 'VIT', adv_examples_exist=False)
+    # experiment('pgd', 'VIT', adv_examples_exist=False)
     experiment('l2_pgd', 'VIT', adv_examples_exist=False)
     experiment('fgsm', 'VIT', adv_examples_exist=False)
     experiment('l2_cw', 'VIT', adv_examples_exist=False)
