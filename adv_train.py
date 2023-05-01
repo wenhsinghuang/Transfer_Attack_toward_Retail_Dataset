@@ -281,3 +281,5 @@ if __name__ == '__main__':
     # experiment('l2_pgd', 'ResNet50', adv_examples_exist=False)
     # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
     # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
+
+    experiment('mia', 'ResNet50', adv_examples_exist=False)
