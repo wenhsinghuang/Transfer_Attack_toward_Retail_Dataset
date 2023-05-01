@@ -129,7 +129,7 @@ def evaluate_model(model, dataloader):
     accuracy = correct / total
     return accuracy
 
-def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=10):
+def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.03, nb_iter=100):
     original_mode = model.training  # Store the original mode of the model
     model.eval()  # Set the model to evaluation mode temporarily
     model = model.to(device)
@@ -236,7 +236,7 @@ def experiment(attack_type, attack_model_name, adv_examples_exist=False):
         attacked_model = resnet_model
     elif attack_model_name == 'ResNet50':
         attacked_model = resnet50_model
-    elif attack_model_name == 'VIT ':
+    elif attack_model_name == 'VIT':
         attacked_model = vit_model
     else:
         raise ValueError(f"Unsupported model: {attack_model_name}")
@@ -282,4 +282,4 @@ if __name__ == '__main__':
     # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
     # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
 
-    experiment('mia', 'ResNet50', adv_examples_exist=False)
+    experiment('l2_pgd', 'VIT', adv_examples_exist=False)
