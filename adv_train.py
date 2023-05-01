@@ -144,7 +144,7 @@ def apply_attack(model, inputs, labels, attack_type='pgd', epsilon=0.2, nb_iter=
     elif attack_type == 'fgsm':
         attack = fb.attacks.FGSM()
     elif attack_type == 'l2_cw':
-        attack = fb.attacks.L2CarliniWagnerAttack(steps=1000)
+        attack = fb.attacks.L2CarliniWagnerAttack(steps=10)
     elif attack_type == 'mia':
         attack = fb.attacks.iterative_projected_gradient.MomentumIterativeAttack()
 
@@ -273,12 +273,12 @@ if __name__ == '__main__':
     # experiment(attack_type, attack_model_name, adv_examples_exist=adv_examples_exist)
 
     experiment('pgd', 'ResNet18', adv_examples_exist=False)
-    # experiment('l2_pgd', 'ResNet18', adv_examples_exist=False)
-    # experiment('fgsm', 'ResNet18', adv_examples_exist=False)
-    # experiment('l2_cw', 'ResNet18', adv_examples_exist=False)
-    # experiment('pgd', 'ResNet50', adv_examples_exist=False)
-    # experiment('l2_pgd', 'ResNet50', adv_examples_exist=False)
-    # experiment('fgsm', 'ResNet50', adv_examples_exist=False)
-    # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
+    experiment('l2_pgd', 'ResNet18', adv_examples_exist=False)
+    experiment('fgsm', 'ResNet18', adv_examples_exist=False)
+    experiment('l2_cw', 'ResNet18', adv_examples_exist=False)
+    experiment('pgd', 'ResNet50', adv_examples_exist=False)
+    experiment('l2_pgd', 'ResNet50', adv_examples_exist=False)
+    experiment('fgsm', 'ResNet50', adv_examples_exist=False)
+    experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
 
     # experiment('pgd', 'VIT', adv_examples_exist=False)
