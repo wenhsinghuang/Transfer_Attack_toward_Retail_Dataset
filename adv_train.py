@@ -61,6 +61,7 @@ class GroceryDataset(Dataset):
 
     def __getitem__(self, idx):
         image = cv2.cvtColor(cv2.imread(self.img_dir + self.img_paths[idx]), cv2.COLOR_BGR2RGB)
+        print(self.img_dir + self.img_paths[idx])
         image = Image.fromarray(image)
         label = np.array(self.img_labels[idx])
 
@@ -125,6 +126,8 @@ def evaluate_model(model, dataloader):
 
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+
+            print(correct)
 
     accuracy = correct / total
     return accuracy
@@ -282,6 +285,6 @@ if __name__ == '__main__':
     # experiment('l2_cw', 'ResNet50', adv_examples_exist=False)
 
     # experiment('pgd', 'VIT', adv_examples_exist=False)
-    experiment('l2_pgd', 'VIT', adv_examples_exist=False)
-    experiment('fgsm', 'VIT', adv_examples_exist=False)
-    experiment('l2_cw', 'VIT', adv_examples_exist=False)
+    experiment('l2_pgd', 'VIT', adv_examples_exist=True)
+    experiment('fgsm', 'VIT', adv_examples_exist=True)
+    experiment('l2_cw', 'VIT', adv_examples_exist=True)
