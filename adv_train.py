@@ -61,7 +61,7 @@ class GroceryDataset(Dataset):
 
     def __getitem__(self, idx):
         image = cv2.cvtColor(cv2.imread(self.img_dir + self.img_paths[idx]), cv2.COLOR_BGR2RGB)
-        print(self.img_dir + self.img_paths[idx])
+        # print(self.img_dir + self.img_paths[idx])
         image = Image.fromarray(image)
         label = np.array(self.img_labels[idx])
 
