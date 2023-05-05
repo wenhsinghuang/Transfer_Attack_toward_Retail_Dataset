@@ -109,6 +109,7 @@ def load_checkpoint_and_resume(model, checkpoint_path):
     return model, optimizer, scheduler, last_epoch
 
 def evaluate_model(model, dataloader):
+    print('evaluate model')
     model.eval()
     model.to(device)
 
